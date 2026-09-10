@@ -1,0 +1,11 @@
+# Docker-Compose-Datei für Portainer (https://hub.docker.com/r/portainer/portainer-ce). Antwortet auf Port 9000 des Servers
+
+services:
+  portainer:
+    image: portainer/portainer-ce
+    ports:
+      - 9000:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./portainer_data:/data
+    restart: always

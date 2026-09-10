@@ -1,0 +1,4 @@
+# Laufzeit-/Datenverzeichnisse der Container (werden erst beim Start erzeugt)
+pihole/etc-pihole/
+pihole/etc-dnsmasq.d/
+portainer/portainer_data/
