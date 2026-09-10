@@ -110,6 +110,7 @@ Docker_basics_mweil/
 * **Kein eigener Port / keine Web-Oberfläche:** Watchtower läuft im Hintergrund und wird nur über Logs (`docker logs watchtower`) beobachtet
 * **Volume:** `/var/run/docker.sock`, damit Watchtower Zugriff auf alle anderen Container des Hosts hat und diese neu starten kann
 * **Zweck im Setup:** hält Pi-hole, Portainer und nginx automatisch aktuell, ohne dass man selbst regelmäßig `docker compose pull` ausführen muss
+* **Eigene Beobachtung:** Mit einer aktuellen Docker-Engine (getestet mit Docker 29.7.2) bricht der Container ohne weitere Anpassung mit `client version 1.25 is too old` ab. Abhilfe schafft die Umgebungsvariable `DOCKER_API_VERSION=1.41` in der Compose-Datei.
 
 ### 🌐 nginx (`nginx/nginx.yml`)
 
@@ -142,3 +143,21 @@ docker ps
 ```
 
 Anschließend wurden die Web-Oberflächen von Pi-hole (`:80`/`admin`), Portainer (`:9000`) und nginx (`:8080`) im Browser aufgerufen und die laufenden Container zusätzlich über **Docker Desktop** gestartet/gestoppt und beobachtet.
+
+## Eigene Beobachtungen aus dem Testlauf
+
+Alle vier Compose-Dateien wurden nacheinander gestartet und funktionieren. Ausgabe von `docker ps` nach dem Hochfahren aller Stacks:
+
+```
+NAMES                     IMAGE                     STATUS                   PORTS
+watchtower-watchtower-1   containrrr/watchtower     Up 2 minutes (healthy)   8080/tcp
+nginx                     nginx:latest              Up 3 minutes             0.0.0.0:8080->80/tcp
+portainer-portainer-1     portainer/portainer-ce    Up 3 minutes             0.0.0.0:9000->9000/tcp
+pihole                    pihole/pihole:latest      Up 3 minutes (healthy)   0.0.0.0:53->53/tcp+udp, 0.0.0.0:80->80/tcp
+```
+
+* **Pi-hole:** Login unter `http://localhost/admin` mit dem beim ersten Start per Zufall generierten Passwort (sichtbar in `docker logs pihole`) erfolgreich getestet – Dashboard zeigt u. a. die Anzahl geladener Blocklist-Domains an.
+* **Portainer:** Beim ersten Aufruf von `http://localhost:9000` muss ein Admin-Account angelegt werden; das dafür nötige Setup-Token findet man ebenfalls im Container-Log (`docker logs portainer-portainer-1`). Nach dem Setup erkennt Portainer automatisch die lokale Docker-Umgebung.
+* **Watchtower:** siehe Kompatibilitäts-Hinweis oben (`DOCKER_API_VERSION`).
+* **nginx:** eigene `index.html` unter `http://localhost:8080` erfolgreich ausgeliefert.
+* Zusätzlich wurden die Container in **Docker Desktop** beobachtet und darüber testweise gestoppt/gestartet, um den Unterschied zur Steuerung per `docker ps`/`docker compose` und per Portainer-Weboberfläche zu sehen.

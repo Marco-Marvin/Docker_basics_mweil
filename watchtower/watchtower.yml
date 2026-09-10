@@ -5,3 +5,7 @@ services:
     image: containrrr/watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      # Ohne diese Variable bricht der Container bei aktuellen Docker-Engine-Versionen mit
+      # "client version 1.25 is too old" ab (beim eigenen Test unter Docker 29.7.2 beobachtet).
+      - DOCKER_API_VERSION=1.41
