@@ -1,0 +1,65 @@
+# Zusammengeführte Compose-Datei für Pi-hole, Portainer, Watchtower und Nginx.
+# Ersetzt nicht die einzelnen *.yml-Dateien in den Unterordnern, sondern ergänzt sie
+# um einen gemeinsamen Stack mit gemeinsamem Netzwerk lab_net.
+
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "67:67/udp"
+      - "80:80/tcp"
+    environment:
+      TZ: 'Europe/Berlin'
+      # WEBPASSWORD: 'set a secure password here or it will be random'
+    volumes:
+      - './pihole/etc-pihole:/etc/pihole'
+      - './pihole/etc-dnsmasq.d:/etc/dnsmasq.d'
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+    networks:
+      - lab_net
+
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./portainer/portainer_data:/data
+    restart: always
+    networks:
+      - lab_net
+
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      # Ohne diese Variable bricht der Container bei aktuellen Docker-Engine-Versionen mit
+      # "client version 1.25 is too old" ab (beim eigenen Test unter Docker 29.7.2 beobachtet).
+      - DOCKER_API_VERSION=1.41
+    restart: unless-stopped
+    networks:
+      - lab_net
+
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - './nginx/html:/usr/share/nginx/html:ro'
+    restart: unless-stopped
+    networks:
+      - lab_net
+
+networks:
+  lab_net:
+    name: lab_net
+    driver: bridge
